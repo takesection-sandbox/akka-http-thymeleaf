@@ -17,15 +17,18 @@ trait Hello {
   implicit val materializer = ActorMaterializer()
   implicit val executionContext = system.dispatcher
 
+  private val templateEngine = {
+    val cl = Thread.currentThread.getContextClassLoader
+    val engine = new TemplateEngine()
+    val resolver = new ClassLoaderTemplateResolver(cl)
+    resolver.setPrefix("/templates/")
+    engine.setTemplateResolver(resolver)
+    engine
+  }
+
   def route = pathEndOrSingleSlash {
     get {
       complete {
-        val cl = Thread.currentThread.getContextClassLoader
-        val templateEngine = new TemplateEngine()
-        val templateResolver = new ClassLoaderTemplateResolver(cl)
-        templateResolver.setPrefix("/templates/")
-        templateEngine.setTemplateResolver(templateResolver)
-
         val context = new Context()
         HttpEntity(ContentTypes.`text/html(UTF-8)`, templateEngine.process("hello.html", context))
       }
